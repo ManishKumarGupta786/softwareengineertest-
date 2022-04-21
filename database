@@ -1,0 +1,77 @@
+# SQL Test Assignment
+
+Attached is a mysqldump of a database to be used during the test.
+
+Below are the questions for this test. Please enter a full, complete, working SQL statement under each question. We do not want the answer to the question. We want the SQL command to derive the answer. We will copy/paste these commands to test the validity of the answer.
+
+**Example:**
+
+_Q. Select all users_
+
+- Please return at least first_name and last_name
+
+SELECT first_name, last_name FROM users;
+
+
+------
+
+**— Test Starts Here —**
+
+1. Select users whose id is either 3,2 or 4
+- Please return at least: all user fields
+Select id,first_name,last_name,email,status,created  from users where id = 3 or id= 4 or id=2
+
+2. Count how many basic and premium listings each active user has
+- Please return at least: first_name, last_name, basic, premium
+
+select  u.first_name,u.last_name,if(l.status=2,'basic','0') as 'basic',count(*) as count ,
+if(l.status=3,'premium','0') as 'premuim' from users u left join listings l 
+on u.id=l.user_id  where u.status=2 group by l.status  
+
+
+3. Show the same count as before but only if they have at least ONE premium listing
+- Please return at least: first_name, last_name, basic, premium
+
+select  u.first_name,u.last_name,if(l.status=2,'basic','0') as 'basic',count(*) as count ,
+if(l.status=3,'premium','0') as 'premuim' from users u left join listings l 
+on u.id=l.user_id  where u.status=2 group by l.status having count(*) >=1
+
+
+4. How much revenue has each active vendor made in 2013
+- Please return at least: first_name, last_name, currency, revenue
+
+select  u.first_name,u.last_name,c.currency,sum(c.price) as revenue from clicks c left join listings l 
+on l.id=c.listing_id
+left join users u on u.id=l.user_id  where u.status=2 and year(c.created)=2013 group by c.created 
+
+
+
+5. Insert a new click for listing id 3, at $4.00
+- Find out the id of this new click. Please return at least: id
+
+INSERT INTO clicks(listing_id,price,currency,created) 
+    VALUES(3,4.00,'USD',now());
+SELECT LAST_INSERT_ID() as id;
+
+6. Show listings that have not received a click in 2013
+- Please return at least: listing_name
+
+select  l.name as listing_name,c.created from clicks c inner join listings l 
+on l.id=c.listing_id
+inner join users u on u.id=l.user_id  where year(c.created )!=2013 
+
+
+7. For each year show number of listings clicked and number of vendors who owned these listings
+- Please return at least: date, total_listings_clicked, total_vendors_affected
+
+select c.created as date,count(c.listing_id) total_listings_clicked, count(u.id) total_vendors_affected 
+from listings  l inner  join clicks c 
+on c.listing_id=l.id
+inner join users u on u.id=l.user_id  where u.status=2 and c.created not in(year(c.created)) group by c.created
+
+
+8. Return a comma separated string of listing names for all active vendors
+- Please return at least: first_name, last_name, listing_names
+
+select GROUP_CONCAT(u.first_name) first_name ,GROUP_CONCAT(u.last_name) last_name,GROUP_CONCAT(l.name) listing_names 
+from listings  l inner join users u on u.id=l.user_id  where u.status=2 
